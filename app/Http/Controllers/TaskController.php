@@ -64,7 +64,22 @@ class TaskController extends Controller
      */
     public function show(Task $task)
     {
-        //
+        /** @var \App\Models\User $user */
+        $user = auth('api')->user();
+
+        // 1. verifica che il task appartenga all'utente autenticato
+        if ($task->user_id !== $user->id) {
+            return response()->json([
+                "status" => "error",
+                "message" => "Non autorizzato",
+            ], 403);
+        }
+
+        // 2. return response()->json(...) con il task
+        return response()->json([
+            "status" => "success",
+            "data" => $task,
+        ]);
     }
 
     /**
@@ -80,7 +95,31 @@ class TaskController extends Controller
      */
     public function update(Request $request, Task $task)
     {
-        //
+        /** @var \App\Models\User $user */
+        $user = auth('api')->user();
+        // 1. verifica che il task appartenga all'utente autenticato (stesso controllo di show)
+        if ($task->user_id !== $user->id) {
+            return response()->json([
+                "status" => "error",
+                "message" => "Non autorizzato",
+            ], 403);
+        }
+
+        // 2. valida i dati in input (title e description, ma qui opzionali con 'sometimes' invece di 'required')
+        $validated = $request->validate([
+            'title' => 'sometimes',
+            'description' => 'sometimes',
+
+        ]);
+
+        // 3. aggiorna il task con i dati validati
+        $task->update($validated);
+
+        // 4. return response()->json(...) con il task aggiornato
+        return response()->json([
+            "status" => "success",
+            "data" => $task,
+        ]);
     }
 
     /**
@@ -88,6 +127,23 @@ class TaskController extends Controller
      */
     public function destroy(Task $task)
     {
-        //
+        /** @var \App\Models\User $user */
+        $user = auth('api')->user();
+        // 1. verifica che il task appartenga all'utente autenticato
+        if ($task->user_id !== $user->id) {
+            return response()->json([
+                "status" => "error",
+                "message" => "Non autorizzato",
+            ], 403);
+        }
+
+        // 2. elimina il task
+        $task->delete();
+
+        // 3. return response()->json(...) di conferma
+        return response()->json([
+            "status" => "success",
+            "message" => "Task eliminato con successo",
+        ]);
     }
 }
