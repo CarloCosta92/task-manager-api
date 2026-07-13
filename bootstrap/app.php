@@ -16,7 +16,44 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->shouldRenderJsonWhen(
-            fn(Request $request) => $request->is('api/*'),
-        );
-    })->create();
+    $exceptions->shouldRenderJsonWhen(
+        fn(Request $request) => $request->is('api/*'),
+    );
+
+    $exceptions->render(function (\Illuminate\Auth\Access\AuthorizationException $e, Request $request) {
+        if ($request->is('api/*')) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Non autorizzato',
+            ], 403);
+        }
+    });
+
+    $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, Request $request) {
+        if ($request->is('api/*')) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Non autenticato',
+            ], 401);
+        }
+    });
+
+    $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException $e, Request $request) {
+    if ($request->is('api/*')) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Non autorizzato',
+        ], 403);
+    }
+});
+
+    $exceptions->render(function (\Illuminate\Validation\ValidationException $e, Request $request) {
+        if ($request->is('api/*')) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Errore di validazione',
+                'errors' => $e->errors(),
+            ], 422);
+        }
+    });
+})->create();
