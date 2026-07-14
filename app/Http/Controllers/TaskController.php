@@ -13,18 +13,51 @@ class TaskController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         // 1. prendi l'utente autenticato
         $user = auth('api')->user();
 
-        // 2. restituisci solo i suoi task (relazione tasks())
-        $tasks = $user->tasks;
+        // 2. costruisci la query di base (usa tasks() con parentesi, non la proprietà,
+        //    perché ora dobbiamo aggiungere condizioni prima di eseguirla)
 
-        // 3. return response()->json(...) con status/data
+        /** @var \App\Models\User $user */
+            $user = auth('api')->user();
+            $query = $user->tasks();
+
+        // 3. applica il filtro "completed" se presente nella query string
+        //    hint: $request->has('completed') per controllare se il parametro esiste
+        //    hint: $query->where('status', $request->boolean('completed'))
+
+        if ($request->has('completed')) {
+            $query->where('status', $request->boolean('completed'));
+        }
+
+
+        // 4. applica il filtro "search" se presente
+        //    hint: $request->has('search')
+        //    hint: $query->where('title', 'like', '%' . $request->search . '%')
+
+        if ($request->has('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
+        }
+
+
+        // 5. pagina i risultati invece di ->get()
+        //    hint: $query->paginate(10)
+        $tasks = $query->paginate(10);
+
+        // 6. return response()->json(...) con TaskResource::collection
+
         return response()->json([
             "status" => "success",
             "data" => TaskResource::collection($tasks),
+             "meta" => [
+        "current_page" => $tasks->currentPage(),
+        "last_page" => $tasks->lastPage(),
+        "per_page" => $tasks->perPage(),
+        "total" => $tasks->total(),
+    ],
         ]);
     }
 
