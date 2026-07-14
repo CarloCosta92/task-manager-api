@@ -22,8 +22,8 @@ class TaskController extends Controller
         //    perché ora dobbiamo aggiungere condizioni prima di eseguirla)
 
         /** @var \App\Models\User $user */
-            $user = auth('api')->user();
-            $query = $user->tasks();
+        $user = auth('api')->user();
+        $query = $user->tasks();
 
         // 3. applica il filtro "completed" se presente nella query string
         //    hint: $request->has('completed') per controllare se il parametro esiste
@@ -52,12 +52,12 @@ class TaskController extends Controller
         return response()->json([
             "status" => "success",
             "data" => TaskResource::collection($tasks),
-             "meta" => [
-        "current_page" => $tasks->currentPage(),
-        "last_page" => $tasks->lastPage(),
-        "per_page" => $tasks->perPage(),
-        "total" => $tasks->total(),
-    ],
+            "meta" => [
+                "current_page" => $tasks->currentPage(),
+                "last_page" => $tasks->lastPage(),
+                "per_page" => $tasks->perPage(),
+                "total" => $tasks->total(),
+            ],
         ]);
     }
 
